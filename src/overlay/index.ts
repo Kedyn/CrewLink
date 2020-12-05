@@ -3,7 +3,7 @@ import { join } from 'path'
 import { throttle } from 'throttle-debounce'
 import { screen } from 'electron'
 import type { BrowserWindow, Rectangle } from 'electron'
-const lib: AddonExports = require('node-gyp-build')(join(__dirname, '..'))
+const lib: AddonExports = require('node-gyp-build')(join(__dirname, '../..'))
 
 interface AddonExports {
   start(
