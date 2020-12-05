@@ -5,11 +5,13 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path'
 import { format as formatUrl } from 'url'
 import './hook';
+import { overlayWindow as OverlayWindow } from "../overlay"
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow: BrowserWindow | null;
+let overlayWindow: BrowserWindow | null;
 
 app.commandLine.appendSwitch('disable-pinch');
 
@@ -76,6 +78,32 @@ if (!gotTheLock) {
 		return window
 	}
 
+	function createOverlayWindow() {
+		const window = new BrowserWindow({
+			width: 800,
+			height: 600,
+			...OverlayWindow.WINDOW_OPTS
+		});
+
+		window.loadURL(`data:text/html;charset=utf-8,
+			<head>
+				<title>overlay-demo</title>
+			</head>
+			<body style="padding: 0; margin: 0;">
+				<div style="position: absolute; width: 100%; height: 100%; border: 4px solid red; background: rgba(255,255,255,0.1); box-sizing: border-box;"></div>
+				<div style="padding-top: 50vh; text-align: center;">
+					<span style="padding: 16px; border-radius: 8px; background: rgb(255,255,255); border: 4px solid red;">Overlay Window</span>
+				</div>
+			</body>
+		`);
+
+		window.setIgnoreMouseEvents(true);
+
+		OverlayWindow.attachTo(window, "Among Us");
+		
+		return window;
+	}
+
 	// quit application when all windows are closed
 	app.on('window-all-closed', () => {
 		// on macOS it is common for applications to stay open until the user explicitly quits
@@ -89,11 +117,16 @@ if (!gotTheLock) {
 		if (mainWindow === null) {
 			mainWindow = createMainWindow()
 		}
+
+		if (overlayWindow === null) {
+			overlayWindow = createOverlayWindow();
+		}
 	})
 
 	// create main BrowserWindow when electron is ready
 	app.on('ready', () => {
 		mainWindow = createMainWindow();
+		overlayWindow = createOverlayWindow();
 	});
 
 	// ipcMain.on('alwaysOnTop', (event, onTop: boolean) => {
